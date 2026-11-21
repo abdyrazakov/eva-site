@@ -80,6 +80,15 @@ section.block > h2 {
   border-radius: var(--radius);
   padding: 16px;
 }
+.cfg__photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  object-fit: contain;
+  margin: 0 auto;
+  border-radius: 12px;
+}
 .cfg__svg svg {
   display: block;
   width: 100%;

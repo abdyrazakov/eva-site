@@ -37,12 +37,20 @@ export interface Review {
   photoUrl?: string;
 }
 
+/** Настоящее фото коврика для конкретного сочетания цвета коврика и канта. */
+export interface ComboPhoto {
+  matId: string;
+  trimId: string;
+  url: string;
+}
+
 export interface SiteData {
   settings: Settings;
   colors: ColorOption[];
   trunkClasses: TrunkClass[];
   photos: Photo[];
   reviews: Review[];
+  comboPhotos: ComboPhoto[];
 }
 
 export type Steering = 'left' | 'right';

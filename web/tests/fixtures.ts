@@ -45,4 +45,5 @@ export const siteDataFixture: SiteData = {
   trunkClasses: defaultTrunkClasses,
   photos: [],
   reviews: [],
+  comboPhotos: [],
 };

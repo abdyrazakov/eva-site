@@ -1,4 +1,4 @@
-import type { ColorOption, Order, SiteData, Steering } from './types';
+import type { ColorOption, ComboPhoto, Order, SiteData, Steering } from './types';
 
 export interface ConfigState {
   borders: boolean;
@@ -11,6 +11,11 @@ export interface ConfigState {
 
 export function colorsFor(data: SiteData, kind: 'mat' | 'trim'): ColorOption[] {
   return data.colors.filter((c) => c.usage === kind || c.usage === 'both');
+}
+
+// Настоящее фото именно для этой пары цветов (загружается владельцем в админке), если оно есть.
+export function findComboPhoto(data: SiteData, matId: string, trimId: string): ComboPhoto | null {
+  return data.comboPhotos.find((p) => p.matId === matId && p.trimId === trimId) ?? null;
 }
 
 // Заказ возможен, только если есть и цвет коврика, и цвет канта (иначе toOrder бросит ошибку).

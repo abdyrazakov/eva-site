@@ -8,19 +8,21 @@ export interface RawData {
   trunkClasses: unknown[];
   photos: unknown[];
   reviews: unknown[];
+  comboPhotos: unknown[];
 }
 
 const IMAGE_THUMB = '600x0';
+const COMBO_THUMB = '1200x0';
 
 const str = (v: unknown): string => (typeof v === 'string' ? v : '');
 const num = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
 const usage = (v: unknown): ColorUsage => (v === 'mat' || v === 'trim' ? v : 'both');
 
-function fileUrl(base: string, r: Rec, field: string): string | undefined {
+function fileUrl(base: string, r: Rec, field: string, thumb = IMAGE_THUMB): string | undefined {
   const name = str(r[field]);
   // Миниатюры (описаны в миграции) вместо оригиналов в 5-8 МБ: страница должна грузиться быстро.
   return name
-    ? `${base}/api/files/${str(r.collectionId)}/${str(r.id)}/${name}?thumb=${IMAGE_THUMB}`
+    ? `${base}/api/files/${str(r.collectionId)}/${str(r.id)}/${name}?thumb=${thumb}`
     : undefined;
 }
 
@@ -60,6 +62,10 @@ export function mapRecords(raw: RawData, fileBase: string): SiteData {
       text: str(r.text),
       photoUrl: fileUrl(fileBase, r, 'photo'),
     })),
+    comboPhotos: (raw.comboPhotos as Rec[]).flatMap((r) => {
+      const url = fileUrl(fileBase, r, 'image', COMBO_THUMB);
+      return url ? [{ matId: str(r.mat), trimId: str(r.trim), url }] : [];
+    }),
   };
 }
 
@@ -82,14 +88,15 @@ export async function loadSiteData(
       `${base}/api/collections/${name}/records?perPage=200${sorted ? '&sort=order' : ''}`,
     );
   try {
-    const [settings, colors, trunkClasses, photos, reviews] = await Promise.all([
+    const [settings, colors, trunkClasses, photos, reviews, comboPhotos] = await Promise.all([
       list('settings', false),
       list('colors', true),
       list('trunk_classes', true),
       list('photos', true),
       list('reviews', true),
+      list('combo_photos', false),
     ]);
-    return mapRecords({ settings, colors, trunkClasses, photos, reviews }, base);
+    return mapRecords({ settings, colors, trunkClasses, photos, reviews, comboPhotos }, base);
   } catch {
     return snapshot;
   }

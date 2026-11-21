@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { initialState, colorsFor, reconcile, toOrder, canOrder } from '../src/lib/configurator';
+import {
+  initialState,
+  colorsFor,
+  reconcile,
+  toOrder,
+  canOrder,
+  findComboPhoto,
+} from '../src/lib/configurator';
 import { siteDataFixture, defaultColors } from './fixtures';
 import type { SiteData } from '../src/lib/types';
 
@@ -68,6 +75,20 @@ describe('canOrder', () => {
   });
   it('is false when there are no colors', () => {
     expect(canOrder({ ...siteDataFixture, colors: [] })).toBe(false);
+  });
+});
+
+describe('findComboPhoto', () => {
+  const data: SiteData = {
+    ...siteDataFixture,
+    comboPhotos: [{ matId: 'red', trimId: 'black', url: '/real.jpg' }],
+  };
+  it('returns the real photo for the exact mat and trim pair', () => {
+    expect(findComboPhoto(data, 'red', 'black')?.url).toBe('/real.jpg');
+  });
+  it('returns null for another pair', () => {
+    expect(findComboPhoto(data, 'red', 'white')).toBeNull();
+    expect(findComboPhoto(data, 'blue', 'black')).toBeNull();
   });
 });
 

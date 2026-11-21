@@ -1,9 +1,21 @@
 import { isSafeHex, renderCabinSvg } from '../lib/cabin-svg';
-import { canOrder, colorsFor, initialState, reconcile, toOrder, type ConfigState } from '../lib/configurator';
+import {
+  canOrder,
+  colorsFor,
+  findComboPhoto,
+  initialState,
+  reconcile,
+  toOrder,
+  type ConfigState,
+} from '../lib/configurator';
 import { interiorPrice, orderTotal, trunkPrice } from '../lib/pricing';
 import type { ColorOption, SiteData, Steering } from '../lib/types';
 import { buildOrderMessage, buildWaLink, validateOrder } from '../lib/whatsapp';
 import { h, replaceChildren } from './dom';
+import { createPhotoPreview, type PhotoPreview } from './photo-preview';
+
+const BASE_PHOTO_URL = '/mats/base.webp';
+const SHAPE_NOTE = 'Форма условная: шьём под ваш автомобиль. Цвета на экране могут чуть отличаться.';
 
 export interface ConfiguratorView {
   update(data: SiteData): void;
@@ -44,8 +56,10 @@ export function mountConfigurator(root: HTMLElement, initial: SiteData): Configu
   let data = initial;
   let state: ConfigState = initialState(data);
   let showErrors = false;
+  let photoPreview: PhotoPreview | null = null;
 
   const preview = h('div', { class: 'cfg__svg' });
+  const previewNote = h('p', { class: 'note' });
   const priceEl = h('p', { class: 'price' });
   const noteEl = h('p', { class: 'note' });
   const leadEl = h('p', { class: 'note' });
@@ -77,6 +91,35 @@ export function mountConfigurator(root: HTMLElement, initial: SiteData): Configu
   const colorName = (kind: 'mat' | 'trim', id: string): string | null =>
     colorsFor(data, kind).find((c) => c.id === id)?.name ?? null;
 
+  // Приоритет: настоящее фото сочетания, затем перекрашенное базовое фото, затем SVG-схема.
+  function renderPreview(): void {
+    const matName = colorName('mat', state.matId) ?? '';
+    const trimName = colorName('trim', state.trimId) ?? '';
+    const trunk = data.trunkClasses.find((t) => t.id === state.trunkId);
+    const trunkNote = trunk ? ` Багажник (${trunk.name}) входит в заказ, на фото он не показан.` : '';
+    const real = findComboPhoto(data, state.matId, state.trimId);
+
+    if (real) {
+      replaceChildren(preview, [
+        h('img', { class: 'cfg__photo', src: real.url, alt: `Коврики ${matName}, кант ${trimName}` }),
+      ]);
+      previewNote.textContent = `Настоящее фото нашей работы.${trunkNote}`;
+    } else if (photoPreview) {
+      photoPreview.draw(colorHex('mat', state.matId), colorHex('trim', state.trimId), state.steering === 'right');
+      replaceChildren(preview, [photoPreview.element]);
+      previewNote.textContent = `${SHAPE_NOTE}${trunkNote}`;
+    } else {
+      preview.innerHTML = renderCabinSvg({
+        matHex: colorHex('mat', state.matId),
+        trimHex: colorHex('trim', state.trimId),
+        borders: state.borders,
+        withTrunk: state.trunkId !== null,
+        steering: (state.steering ?? 'left') as Steering,
+      });
+      previewNote.textContent = '';
+    }
+  }
+
   function render(): void {
     const s = data.settings;
     replaceChildren(bordersBox, [
@@ -107,13 +150,7 @@ export function mountConfigurator(root: HTMLElement, initial: SiteData): Configu
     replaceChildren(matTitle, [colorName('mat', state.matId)]);
     replaceChildren(trimTitle, [colorName('trim', state.trimId)]);
 
-    preview.innerHTML = renderCabinSvg({
-      matHex: colorHex('mat', state.matId),
-      trimHex: colorHex('trim', state.trimId),
-      borders: state.borders,
-      withTrunk: state.trunkId !== null,
-      steering: (state.steering ?? 'left') as Steering,
-    });
+    renderPreview();
 
     const trunk = data.trunkClasses.find((t) => t.id === state.trunkId) ?? null;
     const { total, trunkApprox } = orderTotal({ borders: state.borders, trunk }, s);
@@ -146,7 +183,7 @@ export function mountConfigurator(root: HTMLElement, initial: SiteData): Configu
     h(
       'div',
       { class: 'cfg' },
-      h('div', { class: 'cfg__preview' }, preview, priceEl, noteEl, leadEl),
+      h('div', { class: 'cfg__preview' }, preview, previewNote, priceEl, noteEl, leadEl),
       h(
         'div',
         { class: 'cfg__controls' },
@@ -160,6 +197,10 @@ export function mountConfigurator(root: HTMLElement, initial: SiteData): Configu
     ),
   );
   render();
+  void createPhotoPreview(BASE_PHOTO_URL).then((loaded) => {
+    photoPreview = loaded;
+    render();
+  });
 
   return {
     update(next: SiteData): void {

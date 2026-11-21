@@ -22,6 +22,10 @@ const raw = {
     { id: 'r1', collectionId: 'colR', author: 'Айбек', text: 'супер', photo: 'b.jpg' },
     { id: 'r2', collectionId: 'colR', author: 'Мээрим', text: 'хорошо', photo: '' },
   ],
+  comboPhotos: [
+    { id: 'cp1', collectionId: 'colC', mat: 'c1', trim: 'c2', image: 'real.jpg' },
+    { id: 'cp2', collectionId: 'colC', mat: 'c1', trim: 'c3', image: '' },
+  ],
 };
 
 function fakeFetch(opts: { fail?: 'reject' | 500; emptySettings?: boolean } = {}): typeof fetch {
@@ -37,6 +41,7 @@ function fakeFetch(opts: { fail?: 'reject' | 500; emptySettings?: boolean } = {}
     if (url.includes('/trunk_classes/')) return pick('trunkClasses');
     if (url.includes('/photos/')) return pick('photos');
     if (url.includes('/reviews/')) return pick('reviews');
+    if (url.includes('/combo_photos/')) return pick('comboPhotos');
     return pick('settings');
   }) as typeof fetch;
 }
@@ -51,6 +56,17 @@ describe('mapRecords', () => {
     expect(data.photos[0].url).toBe('https://eva.example/api/files/colP/p1/a.jpg?thumb=600x0');
     expect(data.reviews[0].photoUrl).toBe('https://eva.example/api/files/colR/r1/b.jpg?thumb=600x0');
     expect(data.reviews[1].photoUrl).toBeUndefined();
+  });
+
+  it('maps real combo photos with a large thumb and skips records without a file', () => {
+    const data = mapRecords(raw, 'https://eva.example');
+    expect(data.comboPhotos).toEqual([
+      {
+        matId: 'c1',
+        trimId: 'c2',
+        url: 'https://eva.example/api/files/colC/cp1/real.jpg?thumb=1200x0',
+      },
+    ]);
   });
 });
 
