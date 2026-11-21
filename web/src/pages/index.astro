@@ -1,16 +1,40 @@
 ---
+import '../styles/global.css';
+import snapshot from '../data/snapshot.json';
+
+// `<` экранируем, чтобы данные из БД не могли закрыть тег <script>.
+const snapshotJson = JSON.stringify(snapshot).replace(/</g, '\\u003c');
+const shopName = snapshot.settings.shopName;
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta
+      name="description"
+      content={`${shopName}: EVA-коврики с пошивом канта вручную. Выберите цвета и закажите в WhatsApp.`}
+    />
+    <title>{shopName} — EVA-коврики для автомобиля</title>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <h1>{shopName}</h1>
+        <p>EVA-коврики с кантом, которые мы режем и шьём вручную. Соберите свои цвета и отправьте заказ в WhatsApp.</p>
+      </header>
+
+      <section class="block" aria-label="Конфигуратор">
+        <div id="configurator-root"></div>
+      </section>
+
+      <footer>© {shopName}</footer>
+    </div>
+
+    <script type="application/json" id="snapshot" set:html={snapshotJson} />
+    <script>
+      import '../scripts/app';
+    </script>
+  </body>
 </html>
