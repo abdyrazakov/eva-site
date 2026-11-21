@@ -18,6 +18,20 @@ export function findComboPhoto(data: SiteData, matId: string, trimId: string): C
   return data.comboPhotos.find((p) => p.matId === matId && p.trimId === trimId) ?? null;
 }
 
+// Ключ того, что реально нарисовано на превью. Пока он не изменился (например, пользователь печатает
+// марку авто), фото не перерисовывается: перекраска ~730 тыс. пикселей на каждую букву тормозила бы телефон.
+export function previewKey(state: ConfigState, data: SiteData, photoReady: boolean): string {
+  const real = findComboPhoto(data, state.matId, state.trimId);
+  if (real) return `real:${real.url}`;
+  const hex = (kind: 'mat' | 'trim', id: string): string =>
+    colorsFor(data, kind).find((c) => c.id === id)?.hex ?? '';
+  const mat = hex('mat', state.matId);
+  const trim = hex('trim', state.trimId);
+  const mirrored = state.steering === 'right';
+  if (photoReady) return `photo:${mat}:${trim}:${mirrored}`;
+  return `svg:${mat}:${trim}:${mirrored}:${state.borders}:${state.trunkId !== null}`;
+}
+
 // Заказ возможен, только если есть и цвет коврика, и цвет канта (иначе toOrder бросит ошибку).
 export function canOrder(data: SiteData): boolean {
   return colorsFor(data, 'mat').length > 0 && colorsFor(data, 'trim').length > 0;

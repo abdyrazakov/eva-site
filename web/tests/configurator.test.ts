@@ -6,6 +6,7 @@ import {
   toOrder,
   canOrder,
   findComboPhoto,
+  previewKey,
 } from '../src/lib/configurator';
 import { siteDataFixture, defaultColors } from './fixtures';
 import type { SiteData } from '../src/lib/types';
@@ -89,6 +90,38 @@ describe('findComboPhoto', () => {
   it('returns null for another pair', () => {
     expect(findComboPhoto(data, 'red', 'white')).toBeNull();
     expect(findComboPhoto(data, 'blue', 'black')).toBeNull();
+  });
+});
+
+describe('previewKey', () => {
+  const base = initialState(siteDataFixture);
+  const key = (s = base, ready = true, data = siteDataFixture) => previewKey(s, data, ready);
+
+  it('does not change when only text, borders, trunk or the order button state change', () => {
+    const k = key();
+    expect(key({ ...base, car: 'Toyota Camry 2015' })).toBe(k);
+    expect(key({ ...base, borders: false })).toBe(k);
+    expect(key({ ...base, trunkId: 'sedan' })).toBe(k);
+  });
+  it('changes when mat color, trim color or mirroring change', () => {
+    const k = key();
+    expect(key({ ...base, matId: 'green' })).not.toBe(k);
+    expect(key({ ...base, trimId: 'white' })).not.toBe(k);
+    expect(key({ ...base, steering: 'right' })).not.toBe(k);
+  });
+  it('treats left steering and no steering as the same picture', () => {
+    expect(key({ ...base, steering: 'left' })).toBe(key({ ...base, steering: null }));
+  });
+  it('changes when the recolor photo becomes ready', () => {
+    expect(key(base, false)).not.toBe(key(base, true));
+  });
+  it('uses the real photo url when a combo photo exists', () => {
+    const data: SiteData = {
+      ...siteDataFixture,
+      comboPhotos: [{ matId: base.matId, trimId: base.trimId, url: '/real.jpg' }],
+    };
+    expect(key(base, true, data)).toContain('/real.jpg');
+    expect(key(base, true, data)).not.toBe(key());
   });
 });
 

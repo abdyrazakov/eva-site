@@ -94,7 +94,8 @@ export async function loadSiteData(
       list('trunk_classes', true),
       list('photos', true),
       list('reviews', true),
-      list('combo_photos', false),
+      // Настоящие фото необязательны: если коллекция ещё не создана (миграция не применена), сайт работает без них.
+      list('combo_photos', false).catch((): unknown[] => []),
     ]);
     return mapRecords({ settings, colors, trunkClasses, photos, reviews, comboPhotos }, base);
   } catch {

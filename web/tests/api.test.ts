@@ -28,11 +28,16 @@ const raw = {
   ],
 };
 
-function fakeFetch(opts: { fail?: 'reject' | 500; emptySettings?: boolean } = {}): typeof fetch {
+function fakeFetch(
+  opts: { fail?: 'reject' | 500; emptySettings?: boolean; missingCombo?: boolean } = {},
+): typeof fetch {
   return (async (input: RequestInfo | URL) => {
     if (opts.fail === 'reject') throw new TypeError('network down');
     if (opts.fail === 500) return new Response('boom', { status: 500 });
     const url = String(input);
+    if (opts.missingCombo && url.includes('/combo_photos/')) {
+      return new Response('{"message":"missing"}', { status: 404 });
+    }
     const pick = (key: keyof typeof raw) => {
       const items = key === 'settings' && opts.emptySettings ? [] : raw[key];
       return new Response(JSON.stringify({ items }), { status: 200 });
@@ -75,6 +80,12 @@ describe('loadSiteData', () => {
     const data = await loadSiteData(fakeFetch(), siteDataFixture);
     expect(data.settings.leadDays).toBe(5);
     expect(data.colors).toHaveLength(1);
+  });
+  it('keeps live data when only combo_photos is unavailable (migration not applied yet)', async () => {
+    const data = await loadSiteData(fakeFetch({ missingCombo: true }), siteDataFixture);
+    expect(data).not.toBe(siteDataFixture);
+    expect(data.settings.leadDays).toBe(5);
+    expect(data.comboPhotos).toEqual([]);
   });
   it('returns snapshot when fetch rejects', async () => {
     expect(await loadSiteData(fakeFetch({ fail: 'reject' }), siteDataFixture)).toBe(siteDataFixture);

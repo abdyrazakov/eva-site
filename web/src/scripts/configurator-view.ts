@@ -4,6 +4,7 @@ import {
   colorsFor,
   findComboPhoto,
   initialState,
+  previewKey,
   reconcile,
   toOrder,
   type ConfigState,
@@ -57,6 +58,8 @@ export function mountConfigurator(root: HTMLElement, initial: SiteData): Configu
   let state: ConfigState = initialState(data);
   let showErrors = false;
   let photoPreview: PhotoPreview | null = null;
+  let photoLoading = true;
+  let lastPreviewKey = '';
 
   const preview = h('div', { class: 'cfg__svg' });
   const previewNote = h('p', { class: 'note' });
@@ -99,15 +102,33 @@ export function mountConfigurator(root: HTMLElement, initial: SiteData): Configu
     const trunkNote = trunk ? ` Багажник (${trunk.name}) входит в заказ, на фото он не показан.` : '';
     const real = findComboPhoto(data, state.matId, state.trimId);
 
+    // Пока грузится базовое фото, держим место под него, чтобы страница не прыгала.
+    const waiting = !real && photoLoading;
+    preview.classList.toggle('cfg__svg--loading', waiting);
+    if (waiting) {
+      lastPreviewKey = '';
+      replaceChildren(preview, []);
+      previewNote.textContent = '';
+      return;
+    }
+
+    previewNote.textContent = real
+      ? `Настоящее фото нашей работы.${trunkNote}`
+      : photoPreview
+        ? `${SHAPE_NOTE}${trunkNote}`
+        : '';
+
+    const key = previewKey(state, data, photoPreview !== null);
+    if (key === lastPreviewKey) return;
+    lastPreviewKey = key;
+
     if (real) {
       replaceChildren(preview, [
         h('img', { class: 'cfg__photo', src: real.url, alt: `Коврики ${matName}, кант ${trimName}` }),
       ]);
-      previewNote.textContent = `Настоящее фото нашей работы.${trunkNote}`;
     } else if (photoPreview) {
       photoPreview.draw(colorHex('mat', state.matId), colorHex('trim', state.trimId), state.steering === 'right');
       replaceChildren(preview, [photoPreview.element]);
-      previewNote.textContent = `${SHAPE_NOTE}${trunkNote}`;
     } else {
       preview.innerHTML = renderCabinSvg({
         matHex: colorHex('mat', state.matId),
@@ -116,7 +137,6 @@ export function mountConfigurator(root: HTMLElement, initial: SiteData): Configu
         withTrunk: state.trunkId !== null,
         steering: (state.steering ?? 'left') as Steering,
       });
-      previewNote.textContent = '';
     }
   }
 
@@ -199,6 +219,7 @@ export function mountConfigurator(root: HTMLElement, initial: SiteData): Configu
   render();
   void createPhotoPreview(BASE_PHOTO_URL).then((loaded) => {
     photoPreview = loaded;
+    photoLoading = false;
     render();
   });
 
