@@ -38,7 +38,7 @@ migrate(
     add('settings', {
       shop_name: 'Ева Тоха',
       whatsapp: '996000000000',
-      lead_days: 3,
+      lead_days: 1,
       price_interior_borders: 2200,
       price_interior_plain: 1700,
       trunk_price_per_m2: 1300,
