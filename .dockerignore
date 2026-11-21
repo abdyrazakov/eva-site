@@ -1,0 +1,9 @@
+.git
+.superpowers
+docs
+**/node_modules
+**/dist
+**/.astro
+**/coverage
+backend/pocketbase
+backend/pb_data

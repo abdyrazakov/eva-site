@@ -1,0 +1,19 @@
+# Render Blueprint: один сервис (PocketBase + сайт) с постоянным диском для базы и фото.
+# Диск доступен только на платных тарифах Render (Starter). Бесплатный тариф стирает данные при перезапуске.
+services:
+  - type: web
+    name: eva-toha
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: frankfurt
+    healthCheckPath: /api/health
+    disk:
+      name: pb-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: PB_ADMIN_EMAIL
+        sync: false
+      - key: PB_ADMIN_PASSWORD
+        sync: false
