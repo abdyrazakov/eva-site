@@ -1,0 +1,7 @@
+node_modules
+dist
+.astro
+backend/pocketbase
+backend/pb_data
+.superpowers
+coverage
