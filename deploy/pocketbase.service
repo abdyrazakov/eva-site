@@ -1,0 +1,16 @@
+[Unit]
+Description=PocketBase для сайта Ева Тоха
+After=network.target
+
+[Service]
+Type=simple
+User=eva
+Group=eva
+WorkingDirectory=/srv/eva-site/backend
+ExecStart=/srv/eva-site/backend/pocketbase serve --http=127.0.0.1:8090
+Restart=always
+RestartSec=5
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target
