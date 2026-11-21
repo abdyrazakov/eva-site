@@ -1,6 +1,7 @@
 import { loadSiteData } from '../lib/api';
 import type { SiteData } from '../lib/types';
 import { mountConfigurator } from './configurator-view';
+import { renderSections } from './sections-view';
 
 function readSnapshot(): SiteData {
   const el = document.getElementById('snapshot');
@@ -13,9 +14,18 @@ async function main(): Promise<void> {
   const root = document.getElementById('configurator-root');
   if (!root) return;
 
+  const sectionsRoot = document.getElementById('sections-root');
+  const renderAll = (data: SiteData): void => {
+    if (sectionsRoot) renderSections(sectionsRoot, data);
+  };
+
   const configurator = mountConfigurator(root, snapshot);
+  renderAll(snapshot);
   const live = await loadSiteData(fetch, snapshot);
-  if (live !== snapshot) configurator.update(live);
+  if (live !== snapshot) {
+    configurator.update(live);
+    renderAll(live);
+  }
 }
 
 void main();
