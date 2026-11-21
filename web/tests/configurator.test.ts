@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { initialState, colorsFor, reconcile, toOrder } from '../src/lib/configurator';
+import { initialState, colorsFor, reconcile, toOrder, canOrder } from '../src/lib/configurator';
 import { siteDataFixture, defaultColors } from './fixtures';
 import type { SiteData } from '../src/lib/types';
 
@@ -49,6 +49,25 @@ describe('reconcile', () => {
   it('keeps valid selections untouched', () => {
     const state = { ...initialState(siteDataFixture), matId: 'green', trunkId: 'wagon' };
     expect(reconcile(state, siteDataFixture)).toEqual(state);
+  });
+});
+
+describe('canOrder', () => {
+  const only = (usage: 'mat' | 'trim'): SiteData => ({
+    ...siteDataFixture,
+    colors: [{ id: 'x', name: 'X', hex: '#111111', usage }],
+  });
+  it('is true when both a mat and a trim color exist', () => {
+    expect(canOrder(siteDataFixture)).toBe(true);
+  });
+  it('is false when only trim colors exist', () => {
+    expect(canOrder(only('trim'))).toBe(false);
+  });
+  it('is false when only mat colors exist', () => {
+    expect(canOrder(only('mat'))).toBe(false);
+  });
+  it('is false when there are no colors', () => {
+    expect(canOrder({ ...siteDataFixture, colors: [] })).toBe(false);
   });
 });
 

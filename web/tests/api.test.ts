@@ -48,8 +48,8 @@ describe('mapRecords', () => {
     expect(data.settings.priceInteriorBorders).toBe(2300);
     expect(data.settings.trunkPricePerM2).toBe(1400);
     expect(data.trunkClasses[0].areaM2).toBe(1.1);
-    expect(data.photos[0].url).toBe('https://eva.example/api/files/colP/p1/a.jpg');
-    expect(data.reviews[0].photoUrl).toBe('https://eva.example/api/files/colR/r1/b.jpg');
+    expect(data.photos[0].url).toBe('https://eva.example/api/files/colP/p1/a.jpg?thumb=600x0');
+    expect(data.reviews[0].photoUrl).toBe('https://eva.example/api/files/colR/r1/b.jpg?thumb=600x0');
     expect(data.reviews[1].photoUrl).toBeUndefined();
   });
 });

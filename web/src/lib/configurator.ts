@@ -13,7 +13,12 @@ export function colorsFor(data: SiteData, kind: 'mat' | 'trim'): ColorOption[] {
   return data.colors.filter((c) => c.usage === kind || c.usage === 'both');
 }
 
-const firstId = (list: ColorOption[]): string => list[0]?.id ?? '';
+// Заказ возможен, только если есть и цвет коврика, и цвет канта (иначе toOrder бросит ошибку).
+export function canOrder(data: SiteData): boolean {
+  return colorsFor(data, 'mat').length > 0 && colorsFor(data, 'trim').length > 0;
+}
+
+const firstId =(list: ColorOption[]): string => list[0]?.id ?? '';
 
 export function initialState(data: SiteData): ConfigState {
   const matId = firstId(colorsFor(data, 'mat'));

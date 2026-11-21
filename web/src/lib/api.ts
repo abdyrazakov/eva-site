@@ -10,13 +10,18 @@ export interface RawData {
   reviews: unknown[];
 }
 
+const IMAGE_THUMB = '600x0';
+
 const str = (v: unknown): string => (typeof v === 'string' ? v : '');
 const num = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
 const usage = (v: unknown): ColorUsage => (v === 'mat' || v === 'trim' ? v : 'both');
 
 function fileUrl(base: string, r: Rec, field: string): string | undefined {
   const name = str(r[field]);
-  return name ? `${base}/api/files/${str(r.collectionId)}/${str(r.id)}/${name}` : undefined;
+  // Миниатюры (описаны в миграции) вместо оригиналов в 5-8 МБ: страница должна грузиться быстро.
+  return name
+    ? `${base}/api/files/${str(r.collectionId)}/${str(r.id)}/${name}?thumb=${IMAGE_THUMB}`
+    : undefined;
 }
 
 export function mapRecords(raw: RawData, fileBase: string): SiteData {

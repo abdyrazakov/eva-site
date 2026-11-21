@@ -1,5 +1,5 @@
 import { isSafeHex, renderCabinSvg } from '../lib/cabin-svg';
-import { colorsFor, initialState, reconcile, toOrder, type ConfigState } from '../lib/configurator';
+import { canOrder, colorsFor, initialState, reconcile, toOrder, type ConfigState } from '../lib/configurator';
 import { interiorPrice, orderTotal, trunkPrice } from '../lib/pricing';
 import type { ColorOption, SiteData, Steering } from '../lib/types';
 import { buildOrderMessage, buildWaLink, validateOrder } from '../lib/whatsapp';
@@ -125,7 +125,7 @@ export function mountConfigurator(root: HTMLElement, initial: SiteData): Configu
     const check = validateOrder({ car: state.car, steering: state.steering });
     carError.textContent = showErrors && !check.ok ? (check.errors.car ?? '') : '';
     steeringError.textContent = showErrors && !check.ok ? (check.errors.steering ?? '') : '';
-    orderBtn.disabled = data.colors.length === 0;
+    orderBtn.disabled = !canOrder(data);
   }
 
   carInput.addEventListener('input', () => {
